@@ -1,7 +1,10 @@
 #include "Debug.h"
+
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -132,3 +135,14 @@ void tracer_warning_once(const void *id, const char *msg, ...) {
     va_end(ap);
   }
 }
+
+char* getLLVMMsg(llvm::Value* v){
+     std::string res("");
+     llvm::raw_string_ostream ss(res);
+     ss << *v;
+     char* buf = new char[res.size()];
+     memcpy(buf, res.c_str(), res.size());
+     return buf; 
+}
+ 
+

@@ -5,6 +5,9 @@
 #include <map>
 #include <string>
 
+#include "InstrInfoFactory.h"
+#include "InstrInfo.h"
+
 #include "llvm/Pass.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/BasicBlock.h"
@@ -16,13 +19,18 @@
 class TracerPass : public llvm::FunctionPass {
     public:
 		static char ID;
-        TracerPass() : llvm::FunctionPass(ID){}
+        TracerPass() : llvm::FunctionPass(ID){ initFactory(); };
         virtual bool runOnFunction(llvm::Function &f);
         virtual bool doInitialization(llvm::Module &M);
         virtual bool runOnBasicBlock(llvm::BasicBlock &BB);
+        
+        InstrInfoFactory<InstrInfo> instrInfoFactory;
+
+        void initFactory();
+
     private:
         llvm::Value* logFunc;
 
 };
 
-#endif 
+#endif /* __TRACER_H__ */
