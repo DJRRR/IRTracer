@@ -7,10 +7,21 @@
 using namespace llvm;
 
 
+#define QUICK_REGISTER(x, y) instrInfoFactory.registerType<x>(y)  
+#define DEFAULT_REGISTER(x) \
+    for(int i = 1; i <= 64; i++){ \
+        if(!instrInfoFactory.ifRegistered(i)){ \
+            instrInfoFactory.registerType<DefaultInstrInfo>(i); \
+        } \
+    } \
+
 void TracerPass::initFactory(){
-    instrInfoFactory.registerType<CallInstrInfo>(llvm::Instruction::Call);
-    instrInfoFactory.registerType<StoreInstrInfo>(llvm::Instruction::Store);
-    instrInfoFactory.registerType<LoadInstrInfo>(llvm::Instruction::Load);
+    /* Opcode range: [1,64], see llvm/IR/Instruction.def */
+    QUICK_REGISTER(CallInstrInfo, llvm::Instruction::Call);
+    QUICK_REGISTER(StoreInstrInfo, llvm::Instruction::Store);
+    QUICK_REGISTER(LoadInstrInfo, llvm::Instruction::Load);
+    /* unsupported opcodes */
+    DEFAULT_REGISTER(DefaultInstrInfo);
 }
 
 
@@ -18,12 +29,12 @@ bool TracerPass::runOnFunction(llvm::Function &f){
     bool modified = false;
 	/* TODO: filter some functions maybe */
     /* TODO: set cmd option to specify the task */
-    if(f.getName() != "main"){
+    if(f.getName() == "log_func"){
 		return false;
 	}
     for(auto iter = f.begin(); iter != f.end(); iter++){
         llvm::BasicBlock& bb = *iter;
-        modified |= runOnBasicBlock(bb);
+        modified = runOnBasicBlock(bb);
     }
     return false;
 }
@@ -31,12 +42,13 @@ bool TracerPass::runOnFunction(llvm::Function &f){
 bool TracerPass::runOnBasicBlock(llvm::BasicBlock &BB){
     /* instrumentation */
     llvm::BasicBlock::iterator insertp = BB.getFirstInsertionPt();
-    llvm::Instruction* I = llvm::dyn_cast<llvm::Instruction>(insertp);
-	llvm::Function* testLogger = llvm::dyn_cast<llvm::Function>(logFunc);
-    llvm::Instruction* testI = (llvm::Instruction*)(I->getNextNode()->getNextNode());
-    InstrInfo* instrInfo = instrInfoFactory.create(testI->getOpcode(), testI);
-    instrInfo->instrument(testLogger);
-    tracer_message("line number : %d\n", instrInfo->getLineNumber());
+    for(llvm::BasicBlock::iterator iter = insertp; iter != BB.end(); iter++){
+        llvm::Instruction* I = llvm::dyn_cast<llvm::Instruction>(iter);
+        llvm::Function* logger = llvm::dyn_cast<llvm::Function>(logFunc);
+        InstrInfo* instrInfo = instrInfoFactory.create(I);
+        instrInfo->instrument(logger);
+        tracer_message("line number: %d\n", instrInfo->getLineNumber());
+    }
     return true;
 }
 

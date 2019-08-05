@@ -26,5 +26,10 @@ class LoadInstrInfo : public InstrInfo {
 };
 
 
+class DefaultInstrInfo : public InstrInfo {
+    public:
+        DefaultInstrInfo(llvm::Instruction* I) : InstrInfo(I) {};
+};
+
 
 #endif /* __DERIVEDINSTRINFO_H__ */

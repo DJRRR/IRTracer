@@ -23,13 +23,21 @@ class InstrInfoFactory{
             _createFuncs[opcode] = &createFunc<TDerived>;
         }
 
-        T* create(uint32_t opcode, llvm::Instruction* I){
-            auto it = _createFuncs.find(opcode);
+        T* create(llvm::Instruction* I){
+            auto it = _createFuncs.find(I->getOpcode());
             if(it != _createFuncs.end()){
                 return it -> second(I);
             }
-            tracer_error("Encounter Unregistered Opcode : %u\n", opcode);
+            tracer_error("Encounter Unregistered Opcode : %u\n", I->getOpcode());
             return NULL;
+        }
+
+        bool ifRegistered(uint32_t opcode){
+            auto it = _createFuncs.find(opcode);
+            if(it != _createFuncs.end()){
+                return true;
+            }
+            return false;
         }
 
     private:
