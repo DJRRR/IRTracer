@@ -46,8 +46,11 @@ bool TracerPass::runOnBasicBlock(llvm::BasicBlock &BB){
         llvm::Instruction* I = llvm::dyn_cast<llvm::Instruction>(iter);
         llvm::Function* logger = llvm::dyn_cast<llvm::Function>(logFunc);
         InstrInfo* instrInfo = instrInfoFactory.create(I);
-        instrInfo->instrument(logger);
-        tracer_message("line number: %d\n", instrInfo->getLineNumber());
+        if(!(instrInfo->getLineNumber() == LINE_NUMBER_UNSET || 
+                instrInfo->getLineNumber() == LINE_NUMBER_NOEXIST)){
+            instrInfo->instrument(logger);
+        }
+        //tracer_message("line number: %d\n", instrInfo->getLineNumber());
     }
     return true;
 }
@@ -55,7 +58,8 @@ bool TracerPass::runOnBasicBlock(llvm::BasicBlock &BB){
 bool TracerPass::doInitialization(llvm::Module &M){
     /* init all trace functions to be instrumented */
     auto VoidTy = llvm::Type::getVoidTy(M.getContext());
-    logFunc = M.getOrInsertFunction("log_func", llvm::FunctionType::get(VoidTy, false));
+    llvm::Type* typeList[1] = {llvm::Type::getInt32Ty(M.getContext())};
+    logFunc = M.getOrInsertFunction("log_func", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeList,1), false));
     return false;
 }
 

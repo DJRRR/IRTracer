@@ -74,6 +74,6 @@ char* InstrInfo::getInstrBuf(){
 
 bool InstrInfo::instrument(llvm::Function* tracer){
     llvm::IRBuilder<> IRB(this->instr);
-    /* TODO: add params to tracer function */
-    IRB.CreateCall(tracer);
+    llvm::Value* valueList[1] = {IRB.getInt32(this->lineNumber)};
+    IRB.CreateCall(tracer, ArrayRef<Value*>(valueList,1));
 }
