@@ -8,6 +8,6 @@
 #include <zlib.h>
 
 
-void log_func(){
-    printf("Hello\n");
+void log_func(int lineNumber){
+    printf("Line: %d\n", lineNumber);
 }
