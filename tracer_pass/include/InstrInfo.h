@@ -10,6 +10,10 @@
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/Function.h"
 
+namespace tracer{
+
+class TracerPass;
+
 class InstrInfo {
     public:
         void setLineNumber();
@@ -20,11 +24,13 @@ class InstrInfo {
         uint32_t getOpcode();
         char* getFuncName();
         char* getInstrBuf();
+        bool basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
+
 
         InstrInfo(llvm::Instruction* I);
         
         /* return false: escaped condition, return true: instrument success*/
-        virtual bool instrument(llvm::Function* tracer);
+        virtual bool instrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
 
     protected:
         char *funcName;
@@ -34,6 +40,7 @@ class InstrInfo {
         uint32_t opcode;
 };
 
+} // end namespace tracer
 
 #endif /* __INSTRINFO_H__ */
 

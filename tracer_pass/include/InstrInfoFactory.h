@@ -12,7 +12,7 @@
 #include <map>
 #include <assert.h>
 
-using namespace std;
+namespace tracer {
 
 template<typename T>
 class InstrInfoFactory{
@@ -47,9 +47,9 @@ class InstrInfoFactory{
         }
 
         typedef T* (*PCreateFunc)(llvm::Instruction*);
-        map<uint32_t, PCreateFunc> _createFuncs;
+        std::map<uint32_t, PCreateFunc> _createFuncs;
 
 };
 
-
+} // end namespace tracer
 #endif /* __INSTRINFOFACTORY_H__ */

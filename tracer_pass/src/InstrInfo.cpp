@@ -3,8 +3,10 @@
 #include <assert.h>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "Tracer.h"
 
 using namespace llvm;
+using namespace tracer;
 
 InstrInfo::InstrInfo(Instruction* I){
     this->instr = I;
@@ -72,8 +74,28 @@ char* InstrInfo::getInstrBuf(){
     return this->instrBuf;
 }
 
-bool InstrInfo::instrument(llvm::Function* tracer){
-    llvm::IRBuilder<> IRB(this->instr);
-    llvm::Value* valueList[1] = {IRB.getInt32(this->lineNumber)};
-    IRB.CreateCall(tracer, ArrayRef<Value*>(valueList,1));
+bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){
+    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
+        if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
+                                     this->getLineNumber() == LINE_NUMBER_NOEXIST)){
+            llvm::IRBuilder<> IRB(this->instr);
+            llvm::Value* valueList[1] = {IRB.getInt32(this->lineNumber)};
+            IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,1));
+            return true;
+        }
+    }
+    else if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL){
+        if(isFirstBlock && isFirstInstr){
+            llvm::IRBuilder<> IRB(this->instr);
+            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            llvm::Value* valueList[1] = {str};
+            IRB.CreateCall(tracer->logFuncLevel, ArrayRef<Value*>(valueList,1));
+            return true;
+        }
+    }
+    return false;
+}
+
+bool InstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){
+    return basicInstrument(tracer, isFirstBlock, isFirstInstr);
 }
