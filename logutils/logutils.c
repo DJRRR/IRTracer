@@ -10,13 +10,45 @@
 int callDepth = 0;
 int escaped = false;
 
-void log_line_level(int lineNumber){
-    printf("Line: %d\n", lineNumber);
+bool g_init = false;
+gzFile trace_file;
+
+void fin_logger(){
+    gzclose(trace_file);
 }
 
-void log_func_level(char* funcName){
-    printf("Call: %s\tDepth:%d\n", funcName, callDepth);
+void init_logger(){
+    trace_file = gzopen("dynamic_trace.gz", "w");  
+    if(trace_file == NULL){
+        perror("Failed to open logfile \"dynamic_trace\"");
+        exit(-1);
+    }
+    atexit(&fin_logger);
+    g_init = true;
+}
+
+
+
+void logger_line_level(int lineNumber){
+    if(!g_init){
+        init_logger();
+    }
+    gzprintf(trace_file, "Line: %d\n", lineNumber);
+}
+
+void logger_func_level(char* funcName){
+    if(!g_init){
+        init_logger();
+    }
+    gzprintf(trace_file, "Call: %s\tDepth: %d\n", funcName, callDepth);
     escaped = false;
+}
+
+void logger_bb_level(char* bbHash){
+    if(!g_init){
+        init_logger();
+    }
+    gzprintf(trace_file, "BB: %s\n", bbHash);
 }
 
 

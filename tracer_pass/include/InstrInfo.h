@@ -9,6 +9,7 @@
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/BasicBlock.h"
 
 namespace tracer{
 
@@ -24,8 +25,9 @@ class InstrInfo {
         uint32_t getOpcode();
         char* getFuncName();
         char* getInstrBuf();
+        llvm::BasicBlock* getBasicBlock();
         bool basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
-
+        char* getBBOpList();
 
         InstrInfo(llvm::Instruction* I);
         
@@ -38,6 +40,7 @@ class InstrInfo {
         char *instrBuf;
         llvm::Instruction* instr;
         uint32_t opcode;
+        llvm::BasicBlock* bb;
 };
 
 } // end namespace tracer

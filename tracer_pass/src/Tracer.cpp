@@ -60,8 +60,8 @@ bool TracerPass::runOnFunction(llvm::Function &f){
 	/* TODO: filter some functions maybe */
     /* TODO: set cmd option to specify the task */
     /* TODO: write a fiter-dict rather than dozens of if-else*/
-    if(f.getName() == "log_line_level" || f.getName() == "log_func_level" || 
-            f.getName() == "call_depth_inc" || f.getName() == "call_depth_dec"){
+    if(f.getName() == "logger_line_level" || f.getName() == "logger_func_level" || f.getName() == "logger_bb_level" ||
+            f.getName() == "call_depth_inc" || f.getName() == "call_depth_dec" || f.getName() == "init_logger"){
 		return false;
 	}
     for(auto iter = f.begin(); iter != f.end(); iter++){
@@ -89,13 +89,17 @@ bool TracerPass::doInitialization(llvm::Module &M){
     /* init all trace functions to be instrumented */
     auto VoidTy = llvm::Type::getVoidTy(M.getContext());
     llvm::Type* typeListLine[1] = {llvm::Type::getInt32Ty(M.getContext())};
-    logLineLevel = M.getOrInsertFunction("log_line_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLine,1), false));
+    logLineLevel = M.getOrInsertFunction("logger_line_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLine,1), false));
     
     llvm::Type* typeListFunc[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
-    logFuncLevel = M.getOrInsertFunction("log_func_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListFunc,1), false));
+    logFuncLevel = M.getOrInsertFunction("logger_func_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListFunc,1), false));
     
+    llvm::Type* typeListBB[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
+    logBBLevel = M.getOrInsertFunction("logger_bb_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListBB,1), false));
+
     logCallDepthInc = M.getOrInsertFunction("call_depth_inc", llvm::FunctionType::get(VoidTy, false));
     logCallDepthDec = M.getOrInsertFunction("call_depth_dec", llvm::FunctionType::get(VoidTy, false));
+    
 
     return false;
 }
