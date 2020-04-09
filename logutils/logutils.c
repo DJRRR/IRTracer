@@ -6,6 +6,8 @@
 #include <string.h>
 #include <assert.h>
 #include <zlib.h>
+#include <signal.h>
+#include <unistd.h>
 
 int callDepth = 0;
 int escaped = false;
@@ -14,7 +16,13 @@ bool g_init = false;
 gzFile trace_file;
 
 void fin_logger(){
-    gzclose(trace_file);
+    //gzclose(trace_file);
+    gzflush(trace_file, Z_FINISH);
+}
+
+void signal_handler(){
+    fin_logger();
+    exit(255);
 }
 
 void init_logger(){
@@ -24,16 +32,19 @@ void init_logger(){
         exit(-1);
     }
     atexit(&fin_logger);
+    signal(SIGABRT, signal_handler);
+    signal(SIGSEGV, signal_handler);
+    signal(SIGINT, signal_handler);
     g_init = true;
 }
 
 
 
-void logger_line_level(int lineNumber){
+void logger_line_level(char* fileName, int lineNumber){
     if(!g_init){
         init_logger();
     }
-    gzprintf(trace_file, "Line: %d\n", lineNumber);
+    gzprintf(trace_file, "Line: %s:%d\n", fileName, lineNumber);
 }
 
 void logger_func_level(char* funcName){

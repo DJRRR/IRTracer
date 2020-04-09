@@ -14,6 +14,7 @@ InstrInfo::InstrInfo(Instruction* I){
     this->lineNumber = LINE_NUMBER_UNSET;
     this->bb = I->getParent();
     setLineNumber();
+    setFileName();
     setInstrBuf();
     setFuncName();
 }
@@ -30,6 +31,22 @@ void InstrInfo::setLineNumber(){
     }
     else{
         this->lineNumber = LINE_NUMBER_NOEXIST;
+    }
+}
+
+void InstrInfo::setFileName(){
+    if(!this->instr){
+        tracer_error("InstrInfo Constructor(setFileName) Error: instr == NULL");
+    }
+    MDNode* md = instr->getMetadata("dbg");
+    if(md){
+        DILocation* Loc = dyn_cast<DILocation>(md);
+        this->fileName = new char[Loc->getFilename().size()+1];
+        memcpy(this->fileName, Loc->getFilename().data(), Loc->getFilename().size());
+        this->fileName[Loc->getFilename().size()] = 0;
+    }
+    else{
+        this->fileName = 0;
     }
 }
 
@@ -73,6 +90,10 @@ char* InstrInfo::getFuncName(){
     return this->funcName;
 }
 
+char* InstrInfo::getFileName(){
+    return this->fileName;
+}
+
 char* InstrInfo::getInstrBuf(){
     return this->instrBuf;
 }
@@ -106,8 +127,9 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
         if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
                                      this->getLineNumber() == LINE_NUMBER_NOEXIST)){
             llvm::IRBuilder<> IRB(this->instr);
-            llvm::Value* valueList[1] = {IRB.getInt32(this->lineNumber)};
-            IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,1));
+            Value* str = IRB.CreateGlobalStringPtr(this->fileName);
+            llvm::Value* valueList[2] = {str, IRB.getInt32(this->lineNumber)};
+            IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,2));
             return true;
         }
     }

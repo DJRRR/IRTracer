@@ -88,8 +88,8 @@ bool TracerPass::runOnBasicBlock(llvm::BasicBlock &BB, bool isFirstBlock){
 bool TracerPass::doInitialization(llvm::Module &M){
     /* init all trace functions to be instrumented */
     auto VoidTy = llvm::Type::getVoidTy(M.getContext());
-    llvm::Type* typeListLine[1] = {llvm::Type::getInt32Ty(M.getContext())};
-    logLineLevel = M.getOrInsertFunction("logger_line_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLine,1), false));
+    llvm::Type* typeListLine[2] = {llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt32Ty(M.getContext())};
+    logLineLevel = M.getOrInsertFunction("logger_line_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLine,2), false));
     
     llvm::Type* typeListFunc[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
     logFuncLevel = M.getOrInsertFunction("logger_func_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListFunc,1), false));

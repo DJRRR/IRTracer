@@ -20,10 +20,12 @@ class InstrInfo {
         void setLineNumber();
         void setInstrBuf();
         void setFuncName();
+        void setFileName();
         llvm::Instruction* getInstruction();
         int32_t getLineNumber();
         uint32_t getOpcode();
         char* getFuncName();
+        char* getFileName();
         char* getInstrBuf();
         llvm::BasicBlock* getBasicBlock();
         bool basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
@@ -36,6 +38,7 @@ class InstrInfo {
 
     protected:
         char *funcName;
+        char* fileName;
         int32_t lineNumber;
         char *instrBuf;
         llvm::Instruction* instr;
