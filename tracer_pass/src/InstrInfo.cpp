@@ -127,7 +127,7 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
         if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
                                      this->getLineNumber() == LINE_NUMBER_NOEXIST)){
             llvm::IRBuilder<> IRB(this->instr);
-            Value* str = IRB.CreateGlobalStringPtr(this->fileName);
+            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[2] = {str, IRB.getInt32(this->lineNumber)};
             IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,2));
             return true;

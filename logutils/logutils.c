@@ -8,6 +8,7 @@
 #include <zlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <string.h>
 
 int callDepth = 0;
 int escaped = false;
@@ -15,9 +16,28 @@ int escaped = false;
 bool g_init = false;
 gzFile trace_file;
 
+char currCaller[256];
+
+char currCallerFile[256];
+
+int currCallerLine;
+
+int Logging = 1;
+
 void fin_logger(){
     //gzclose(trace_file);
     gzflush(trace_file, Z_FINISH);
+}
+
+void setCaller(char* funcName, char* fileName, int lineNum, int startLogging){
+    strcpy(currCaller, funcName);
+    strcpy(currCallerFile, fileName);
+    currCallerLine = lineNum;
+    Logging = startLogging;
+}
+
+void startLog(){
+    Logging = 1;
 }
 
 void signal_handler(){
@@ -44,22 +64,32 @@ void logger_line_level(char* fileName, int lineNumber){
     if(!g_init){
         init_logger();
     }
-    gzprintf(trace_file, "Line: %s:%d\n", fileName, lineNumber);
+    if(Logging){
+        gzprintf(trace_file, "%s:%d\n", fileName, lineNumber);
+    }
 }
 
 void logger_func_level(char* funcName){
     if(!g_init){
         init_logger();
     }
-    gzprintf(trace_file, "Call: %s\tDepth: %d\n", funcName, callDepth);
+    if(Logging){
+        gzprintf(trace_file, "%s:%s:%s:%d\n", funcName, currCaller, currCallerFile, currCallerLine);
+    }
     escaped = false;
+    memset(currCaller, 0, sizeof(char)*256);
+    memset(currCallerFile, 0, sizeof(char)*256);
+    currCallerLine=0;
+
 }
 
 void logger_bb_level(char* bbHash){
     if(!g_init){
         init_logger();
     }
-    gzprintf(trace_file, "BB: %s\n", bbHash);
+    if(Logging){
+        gzprintf(trace_file, "%s\n", bbHash);
+    }
 }
 
 

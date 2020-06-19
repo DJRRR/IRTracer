@@ -23,7 +23,6 @@ template<typename T>class InstrInfoFactory;
 
 class TracerPass : public llvm::FunctionPass {
     public:
-
         enum TraceMode : uint8_t {
             TRACE_LINE_LEVEL = 1,
             TRACE_FUNC_LEVEL,
@@ -40,6 +39,8 @@ class TracerPass : public llvm::FunctionPass {
         llvm::Value* logBBLevel; // trace the execution at Basic-block level
         llvm::Value* logCallDepthInc; // record the depth of call path(+)
         llvm::Value* logCallDepthDec; // record the depth of call path(-)
+        llvm::Value* setCaller; //record global caller
+        llvm::Value* startLog; //begin logging
 
         uint8_t getTraceMode();
 
