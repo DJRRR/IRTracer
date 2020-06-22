@@ -10,6 +10,8 @@
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/IRBuilder.h"
+#include <map>
 
 namespace tracer{
 
@@ -30,11 +32,15 @@ class InstrInfo {
         llvm::BasicBlock* getBasicBlock();
         bool basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
         char* getBBOpList();
-
-        InstrInfo(llvm::Instruction* I);
         
+        InstrInfo(llvm::Instruction* I);
+               
         /* return false: escaped condition, return true: instrument success*/
         virtual bool instrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr);
+        
+        //static std::map<llvm::StringRef, llvm::Value*> globalPtrMap;
+
+        //static llvm::Value* getGlobalPtr(llvm::StringRef strRef, llvm::IRBuilder<> IRB);
 
     protected:
         char *funcName;

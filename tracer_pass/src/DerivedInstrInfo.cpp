@@ -1,9 +1,14 @@
 #include "DerivedInstrInfo.h"
+#include "InstrInfo.h"
 #include "Tracer.h"
 #include "Debug.h"
 #include "llvm-c/Core.h"
+#include <map>
+#include "Cache.h"
+
 using namespace tracer;
 using namespace llvm;
+
 
 bool CallInstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){
     basicInstrument(tracer, isFirstBlock, isFirstInstr);
@@ -14,9 +19,9 @@ bool CallInstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFir
     //ignore the externel call
     if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL || tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
         llvm::IRBuilder<> IRB(this->instr);
-        llvm::Value* funcStr = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+        llvm::Value* funcStr = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
         llvm::StringRef* strRef = new llvm::StringRef(this->getFileName());
-        llvm::Value* fileStr = IRB.CreateGlobalStringPtr(*strRef);
+        llvm::Value* fileStr = getGlobalPtr(*strRef, IRB);//IRB.CreateGlobalStringPtr(*strRef);
         llvm::CallInst* callInst = dyn_cast<llvm::CallInst>(this->instr);
         llvm::Function* func = callInst->getCalledFunction();
         //it seems that when func ptr is used, the getCalledFunction would return NULL
@@ -51,7 +56,7 @@ bool RetInstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFirs
     if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
         //mark the boundary
         llvm::IRBuilder<> IRB(this->instr);
-        Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+        Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
         llvm::Value* valueList[1] = {str};
         IRB.CreateCall(tracer->logLineFuncEnd, ArrayRef<Value*>(valueList,1));
     }

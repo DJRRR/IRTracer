@@ -4,9 +4,11 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "Tracer.h"
+#include "Cache.h"
 
 using namespace llvm;
 using namespace tracer;
+
 
 InstrInfo::InstrInfo(Instruction* I){
     this->instr = I;
@@ -18,6 +20,7 @@ InstrInfo::InstrInfo(Instruction* I){
     setInstrBuf();
     setFuncName();
 }
+
 
 void InstrInfo::setLineNumber(){
 	if(!this->instr){
@@ -127,7 +130,7 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
         if(isFirstBlock && isFirstInstr){
             //mark the boundary
         	llvm::IRBuilder<> IRB(this->instr);
-            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[1] = {str};
             IRB.CreateCall(tracer->logLineFuncBegin, ArrayRef<Value*>(valueList,1));
             return true;  
@@ -135,7 +138,7 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
         if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
                                      this->getLineNumber() == LINE_NUMBER_NOEXIST)){
             llvm::IRBuilder<> IRB(this->instr);
-            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[2] = {str, IRB.getInt32(this->lineNumber)};
             IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,2));
             return true;
@@ -146,7 +149,7 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
     else if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL){
         if(isFirstBlock && isFirstInstr){
             llvm::IRBuilder<> IRB(this->instr);
-            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[1] = {str};
             IRB.CreateCall(tracer->logFuncLevel, ArrayRef<Value*>(valueList,1));
             return true;
@@ -157,7 +160,7 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
             llvm::IRBuilder<> IRB(this->instr);
             /* calculate the hash of a basic-block */
             llvm::StringRef* strRef = new llvm::StringRef(getBBOpList());
-			Value* str = IRB.CreateGlobalStringPtr(*strRef);
+			Value* str = getGlobalPtr(*strRef, IRB);//IRB.CreateGlobalStringPtr(*strRef);
             llvm::Value* valueList[1] = {str};
             IRB.CreateCall(tracer->logBBLevel, ArrayRef<Value*>(valueList, 1));
             return true;
