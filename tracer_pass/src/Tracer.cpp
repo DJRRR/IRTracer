@@ -63,7 +63,7 @@ bool TracerPass::runOnFunction(llvm::Function &f){
     if(f.getName() == "logger_line_level" || f.getName() == "logger_func_level" || f.getName() == "logger_bb_level" ||
             f.getName() == "call_depth_inc" || f.getName() == "call_depth_dec" || f.getName() == "init_logger" || 
             f.getName() == "setCaller" || f.getName() == "fin_logger" || f.getName() == "signal_handler" || 
-            f.getName() == "startLog"){
+            f.getName() == "startLog" || f.getName() == "logger_line_level_func_begin" || f.getName() == "logger_line_level_func_end"){
 		return false;
 	}
     for(auto iter = f.begin(); iter != f.end(); iter++){
@@ -93,6 +93,12 @@ bool TracerPass::doInitialization(llvm::Module &M){
     llvm::Type* typeListLine[2] = {llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt32Ty(M.getContext())};
     logLineLevel = M.getOrInsertFunction("logger_line_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLine,2), false));
     
+    llvm::Type* typeListLineFuncBegin[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
+    logLineFuncBegin = M.getOrInsertFunction("logger_line_level_func_begin", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLineFuncBegin,1), false));
+    
+    llvm::Type* typeListLineFuncEnd[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
+    logLineFuncEnd = M.getOrInsertFunction("logger_line_level_func_end", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListLineFuncEnd,1), false));
+
     llvm::Type* typeListFunc[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
     logFuncLevel = M.getOrInsertFunction("logger_func_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListFunc,1), false));
     

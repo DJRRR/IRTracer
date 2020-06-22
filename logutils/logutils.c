@@ -60,14 +60,33 @@ void init_logger(){
 
 
 
-void logger_line_level(char* fileName, int lineNumber){
+void logger_line_level(char* funcName, int lineNumber){
     if(!g_init){
         init_logger();
     }
     if(Logging){
-        gzprintf(trace_file, "%s:%d\n", fileName, lineNumber);
+        gzprintf(trace_file, "%s:%d\n", funcName, lineNumber);
     }
 }
+
+void logger_line_level_func_begin(char* funcName){
+    if(!g_init){
+        init_logger();
+    }
+    if(Logging){
+        gzprintf(trace_file, "[B]%s\n", funcName);
+    }
+}
+
+void logger_line_level_func_end(char* funcName){
+    if(!g_init){
+        init_logger();
+    }
+    if(Logging){
+        gzprintf(trace_file, "[E]%s\n", funcName);
+    }
+}
+
 
 void logger_func_level(char* funcName){
     if(!g_init){

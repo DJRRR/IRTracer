@@ -11,7 +11,8 @@ bool CallInstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFir
         llvm::IRBuilder<> IRB(this->instr);
         IRB.CreateCall(tracer->logCallDepthInc);
     }*/
-    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL){
+    //ignore the externel call
+    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL || tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
         llvm::IRBuilder<> IRB(this->instr);
         llvm::Value* funcStr = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
         llvm::StringRef* strRef = new llvm::StringRef(this->getFileName());
@@ -47,5 +48,12 @@ bool RetInstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFirs
         llvm::IRBuilder<> IRB(this->instr);
         IRB.CreateCall(tracer->logCallDepthDec);
     }*/
+    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
+        //mark the boundary
+        llvm::IRBuilder<> IRB(this->instr);
+        Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+        llvm::Value* valueList[1] = {str};
+        IRB.CreateCall(tracer->logLineFuncEnd, ArrayRef<Value*>(valueList,1));
+    }
     return true;
 }

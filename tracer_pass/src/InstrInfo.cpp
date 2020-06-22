@@ -124,6 +124,14 @@ char* InstrInfo::getBBOpList(){
 
 bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){
     if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
+        if(isFirstBlock && isFirstInstr){
+            //mark the boundary
+        	llvm::IRBuilder<> IRB(this->instr);
+            Value* str = IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            llvm::Value* valueList[1] = {str};
+            IRB.CreateCall(tracer->logLineFuncBegin, ArrayRef<Value*>(valueList,1));
+            return true;  
+        } 
         if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
                                      this->getLineNumber() == LINE_NUMBER_NOEXIST)){
             llvm::IRBuilder<> IRB(this->instr);
@@ -132,6 +140,8 @@ bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFi
             IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,2));
             return true;
         }
+        
+
     }
     else if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL){
         if(isFirstBlock && isFirstInstr){

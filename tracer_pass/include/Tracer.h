@@ -35,6 +35,8 @@ class TracerPass : public llvm::FunctionPass {
         virtual bool doInitialization(llvm::Module &M);
         virtual bool runOnBasicBlock(llvm::BasicBlock &BB, bool isFirstBlock);
         llvm::Value* logLineLevel; // trace the execution at source-line level
+        llvm::Value* logLineFuncBegin; //mark the bounds of func
+        llvm::Value* logLineFuncEnd; //mark the bounds of func
         llvm::Value* logFuncLevel; // trace the execution at function level
         llvm::Value* logBBLevel; // trace the execution at Basic-block level
         llvm::Value* logCallDepthInc; // record the depth of call path(+)
