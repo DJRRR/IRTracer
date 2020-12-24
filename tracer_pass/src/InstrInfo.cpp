@@ -126,47 +126,57 @@ char* InstrInfo::getBBOpList(){
  */
 
 bool InstrInfo::basicInstrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){
-    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){
+    bool modified = false;
+
+    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL || tracer->getTraceMode() == TracerPass::TraceMode::TRACE_BB_LEVEL){
         if(isFirstBlock && isFirstInstr){
             //mark the boundary
         	llvm::IRBuilder<> IRB(this->instr);
-            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName().str(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[1] = {str};
             IRB.CreateCall(tracer->logLineFuncBegin, ArrayRef<Value*>(valueList,1));
-            return true;  
-        } 
+            modified = true;  
+        }
+    }
+    if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_LINE_LEVEL){ 
         if(!(this->getLineNumber() == LINE_NUMBER_UNSET || 
                                      this->getLineNumber() == LINE_NUMBER_NOEXIST)){
             llvm::IRBuilder<> IRB(this->instr);
-            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName().str(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[2] = {str, IRB.getInt32(this->lineNumber)};
             IRB.CreateCall(tracer->logLineLevel, ArrayRef<Value*>(valueList,2));
-            return true;
+            modified = true;
         }
-        
 
     }
     else if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_FUNC_LEVEL){
         if(isFirstBlock && isFirstInstr){
             llvm::IRBuilder<> IRB(this->instr);
-            Value* str = getGlobalPtr(this->instr->getFunction()->getName(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
+            Value* str = getGlobalPtr(this->instr->getFunction()->getName().str(), IRB);//IRB.CreateGlobalStringPtr(this->instr->getFunction()->getName());
             llvm::Value* valueList[1] = {str};
             IRB.CreateCall(tracer->logFuncLevel, ArrayRef<Value*>(valueList,1));
-            return true;
+            modified = true;
         }
     }
     else if(tracer->getTraceMode() == TracerPass::TraceMode::TRACE_BB_LEVEL){
         if(isFirstInstr){
             llvm::IRBuilder<> IRB(this->instr);
             /* calculate the hash of a basic-block */
-            llvm::StringRef* strRef = new llvm::StringRef(getBBOpList());
-			Value* str = getGlobalPtr(*strRef, IRB);//IRB.CreateGlobalStringPtr(*strRef);
-            llvm::Value* valueList[1] = {str};
-            IRB.CreateCall(tracer->logBBLevel, ArrayRef<Value*>(valueList, 1));
-            return true;
+            //llvm::StringRef* strRef = new llvm::StringRef(getBBOpList());
+            std::string basicBlockID = "";
+            std::string Str;
+            llvm::raw_string_ostream OS(Str);
+            this->bb->printAsOperand(OS, false);
+            basicBlockID = OS.str();
+            llvm::StringRef* strRef = new llvm::StringRef(basicBlockID.c_str());
+            Value* strVal = getGlobalPtr(basicBlockID, IRB);//IRB.CreateGlobalStringPtr(*strRef);
+            Value* funcVal = getGlobalPtr(this->instr->getFunction()->getName().str(), IRB);
+            llvm::Value* valueList[2] = {funcVal, strVal};
+            IRB.CreateCall(tracer->logBBLevel, ArrayRef<Value*>(valueList, 2));
+            modified = true;
         }
     }
-    return false;
+    return modified;
 }
 
 bool InstrInfo::instrument(TracerPass* tracer, bool isFirstBlock, bool isFirstInstr){

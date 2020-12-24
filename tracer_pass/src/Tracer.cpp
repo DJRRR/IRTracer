@@ -63,7 +63,7 @@ bool TracerPass::runOnFunction(llvm::Function &f){
     if(f.getName() == "logger_line_level" || f.getName() == "logger_func_level" || f.getName() == "logger_bb_level" ||
             f.getName() == "call_depth_inc" || f.getName() == "call_depth_dec" || f.getName() == "init_logger" || 
             f.getName() == "setCaller" || f.getName() == "fin_logger" || f.getName() == "signal_handler" || 
-            f.getName() == "startLog" || f.getName() == "logger_line_level_func_begin" || f.getName() == "logger_line_level_func_end"){
+            f.getName() == "startLog" || f.getName() == "logger_line_level_func_begin" || f.getName() == "logger_line_level_func_end" || f.getName() == "signal_segv_handler"){
 		return false;
 	}
     for(auto iter = f.begin(); iter != f.end(); iter++){
@@ -102,16 +102,17 @@ bool TracerPass::doInitialization(llvm::Module &M){
     llvm::Type* typeListFunc[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
     logFuncLevel = M.getOrInsertFunction("logger_func_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListFunc,1), false));
     
-    llvm::Type* typeListBB[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
-    logBBLevel = M.getOrInsertFunction("logger_bb_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListBB,1), false));
+    llvm::Type* typeListBB[2] = {llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt8PtrTy(M.getContext())};
+    logBBLevel = M.getOrInsertFunction("logger_bb_level", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListBB,2), false));
 
     logCallDepthInc = M.getOrInsertFunction("call_depth_inc", llvm::FunctionType::get(VoidTy, false));
     logCallDepthDec = M.getOrInsertFunction("call_depth_dec", llvm::FunctionType::get(VoidTy, false));
     
-    llvm::Type* typeListCaller[4] = {llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt32Ty(M.getContext()), llvm::Type::getInt32Ty(M.getContext())};
+    llvm::Type* typeListCaller[4] = {llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt8PtrTy(M.getContext()), llvm::Type::getInt32Ty(M.getContext())};
     setCaller = M.getOrInsertFunction("setCaller", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListCaller,4), false));
     
-    startLog = M.getOrInsertFunction("startLog", llvm::FunctionType::get(VoidTy, false));
+    llvm::Type* typeListStartLog[1] = {llvm::Type::getInt8PtrTy(M.getContext())};
+    startLog = M.getOrInsertFunction("startLog", llvm::FunctionType::get(VoidTy, ArrayRef<Type*>(typeListStartLog,1), false));
     return false;
 }
 

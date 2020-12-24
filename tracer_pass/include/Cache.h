@@ -5,7 +5,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/ADT/StringRef.h"
 
-llvm::Value* getGlobalPtr(llvm::StringRef strRef, llvm::IRBuilder<> IRB);
+llvm::Value* getGlobalPtr(std::string strRef, llvm::IRBuilder<> IRB);
 
 
 #endif /* __CACHE_H__ */
